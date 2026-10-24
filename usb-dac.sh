@@ -164,11 +164,21 @@ restart_adbd_tcp_after_gadget(){
     </dev/null >/dev/null 2>&1 &
 }
 
+mixer_enum_value(){
+  ENUM_TEXT=$(tinymix -D 1 "$1" 2>/dev/null) || return 1
+  # Sony tinymix lists every enum choice and prefixes the selected one with >.
+  # Matching the entire list selects btl even when the actual value is >none.
+  case "$ENUM_TEXT" in
+    *'>'*) printf '%s\n' "$ENUM_TEXT" | sed -n 's/.*>\([^[:space:]]*\).*/\1/p';;
+    *) printf '%s\n' "$ENUM_TEXT" | sed 's/.*: *//';;
+  esac
+}
+
 dac_path(){
-  BTL=$(tinymix -D 1 33 2>/dev/null | sed 's/.*: //')
-  SE=$(tinymix -D 1 32 2>/dev/null | sed 's/.*: //')
-  case "$BTL" in *btl*) AMP=smaster-btl;; *)
-    case "$SE" in *pin*) AMP=smaster-se;; *) AMP=smaster-btl;; esac ;; esac
+  BTL=$(mixer_enum_value 33)
+  SE=$(mixer_enum_value 32)
+  case "$BTL" in btl) AMP=smaster-btl;; *)
+    case "$SE" in 3pin|4pin|5pin) AMP=smaster-se;; *) AMP=smaster-btl;; esac ;; esac
   # Do not force-unmute (ctl 13). The current hardware mute state is preserved
   # and seeded into the Feature Unit, so if the device was muted entering DAC mode it
   # stays muted until the host explicitly unmutes -- never blast sound on mode entry.

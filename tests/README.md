@@ -17,3 +17,14 @@ Expected output:
 ```text
 resampler: 8 rates x 24-bit x 4 patterns x 3 deltas + canaries PASS
 ```
+
+## Headphone route selection
+
+```sh
+sh tests/headphone-route-test.sh
+```
+
+Mocks tinymix and mixer, so it never touches a sound device. Covers Sony enum
+output (including >none btl with >3pin selected), all three single-ended jack
+values, balanced priority, no-jack/antenna fallback, and single-value output.
+Expected output: `headphone route: 9 cases PASS (no hardware access)`.
